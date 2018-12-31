@@ -75,8 +75,10 @@ function calculateWinner(squares) {
       });
 
       let status;
-      if (winner) {
+            if (winner) {
         status = 'Winner: ' + winner;
+      } else if (!winner) {
+        status = 'Issa tie'
       } else {
         status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
       }
