@@ -7,7 +7,14 @@ module.exports = {
           use: {
             loader: "babel-loader"
           }
-        }
+        },
+        {
+          test: /\.(png|jpg|gif)$/,
+          loader: 'file-loader',
+          options: {
+            name: '/albums/[name].[ext]',
+          },
+        },
       ]
     }
   };

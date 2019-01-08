@@ -1,99 +1,129 @@
 import React, {Component} from "react";
-
-import Board from '../Board/Board'
-
-function calculateWinner(squares) {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
-      }
-    }
-    return null;
-  }
+import './Game.css';
+import CardView from '../CardView/CardView';
+import Cards from '../Cards/Cards';
 
   class Game extends Component {
+
     constructor(props) {
       super(props);
-      this.state = {
-          history: [{
-              squares: Array(9).fill(null),
-          }],
-          stepNumber: 0,
-          xIsNext: true,
-      }
+      this.onCardClicked = this.onCardClicked.bind(this);
+      this.onPlayAgain = this.onPlayAgain.bind(this);
+      this.memoryCards = new Cards();
     }
 
-    handleCLick(i) {
-        const history = this.state.history.slice(0, this.state.stepNumber + 1);
-        const current = history[history.length - 1];
-        const squares = current.squares.slice();
-        if (calculateWinner(squares) || squares[i]) {
-            return;
-        }
-        squares[i] = this.state.xIsNext ? 'X' : 'O';
-        this.setState({
-          history: history.concat([{
-            squares: squares,
-          }]),
-          stepNumber: history.length,
-          xIsNext: !this.state.xIsNext,
-        });
-      }
-
-      jumpTo(step) {
-        this.setState({
-          stepNumber: step,
-          xIsNext: (step % 2) === 0,
-        });
-      }
-
-    render() {
-      const history = this.state.history;
-      const current = history[this.state.stepNumber];
-      const winner = calculateWinner(current.squares);
-
-      const moves = history.map((step, move) => {
-        const desc = move ?
-          'Go to move #' + move :
-          'Go to game start';
-        return (
-          <li key={move}>
-            <label onClick={() => this.jumpTo(move)}>{desc}</label>
-          </li>
-        );
+    componentWillMount() {
+      this.initGame();
+    }
+  
+    initGame() {
+      this.memoryCards.generateCardSet();
+      this.setState({
+        turnNo : 1,
+        pairsFound : 0,
+        numClicksWithinTurn : 0,
+        firstId : undefined,
+        secondId : undefined
       });
-
-      let status;
-            if (winner) {
-        status = 'Winner: ' + winner;
-      } else if (!winner) {
-        status = 'Issa tie'
-      } else {
-        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+  
+    getCardViews() {
+      let cardViews = [];
+      let onClick = this.onCardClicked;
+      this.memoryCards.cards.forEach(c => {
+        let cardView = <CardView key={c.id} 
+            id={c.id} 
+            image={c.image}
+            imageUp = {c.imageUp}
+            matched = {c.matched} 
+            onClick={onClick}/>;
+            cardViews.push(cardView);
+      });
+      return cardViews;
+    }
+  
+    clearCards(id1,id2) {
+      if (this.state.numClicksWithinTurn !== 2) {
+        return;
       }
-
+      this.memoryCards.flipCard(this.state.firstId, false);
+      this.memoryCards.flipCard(this.state.secondId, false);
+      this.setState({
+        firstId: undefined,
+        secondId: undefined,
+        numClicksWithinTurn: 0,
+        turnNo : this.state.turnNo+1
+      });
+    }
+  
+    onCardClicked(id,image) {
+      if (this.state.numClicksWithinTurn === 0 || this.state.numClicksWithinTurn === 2) {
+        if (this.state.numClicksWithinTurn === 2) {
+          clearTimeout(this.timeout);
+          this.clearCards(this.state.firstId, this.state.secondId);        
+        }
+        this.memoryCards.flipCard(id, true);
+        this.setState({
+          firstId : id,
+          numClicksWithinTurn : 1
+        });
+      } else if (this.state.numClicksWithinTurn === 1) {
+        this.memoryCards.flipCard(id, true);
+        this.setState({
+          secondId : id,
+          numClicksWithinTurn : 2
+        });
+  
+        if (this.memoryCards.cardsHaveIdenticalImages(id, this.state.firstId)) {
+          this.memoryCards.setCardAsMatched(this.state.firstId, true);
+          this.memoryCards.setCardAsMatched(id, true);
+          this.setState({
+            pairsFound: this.state.pairsFound+1,
+            firstId: undefined,
+            secondId: undefined,
+            turnNo : this.state.turnNo+1,
+            numClicksWithinTurn: 0
+          });
+  
+        } else {
+          this.timeout = setTimeout(() => { 
+            this.clearCards(this.state.firstId, this.state.secondId);
+          },500); 
+        }
+  
+      }
+    }
+  
+    onPlayAgain() {
+      this.initGame();
+    }
+  
+    render() {
+      let cardViews = this.getCardViews();
+      let gameStatus = <div className='Game-status'>
+                        <div>Turn: {this.state.turnNo}</div>
+                        <div>Pairs found: {this.state.pairsFound}</div>
+                      </div>;
+  
+      if (this.state.pairsFound === this.memoryCards.NUM_IMAGES) {
+        gameStatus = <div className='Game-status'>
+                      <div>GAME COMPLETE!</div>
+                      <div>You used {this.state.turnNo-1} turns</div>
+                      <div><button onClick={this.onPlayAgain}>Play again?</button></div></div>;      
+      }
+  
       return (
-        <div className="game">
-          <div className="game-board">
-            <Board 
-               squares={current.squares}
-               onClick={(i) => this.handleCLick(i)}
-            />
+        <div className='Game'>
+          <div className='spacer'></div>
+          <header className='Game-header'>
+            <div className='Game-title'>TRAP ~n~ MATCH</div>
+          </header>
+          <div>
+            {gameStatus}
           </div>
-          <div className="game-info">
-            <div>{status}</div>
-            <ol>{moves}</ol>
+          <div className='spacer'></div>
+          <div className='CardContainer'>
+            {cardViews}
           </div>
         </div>
       );

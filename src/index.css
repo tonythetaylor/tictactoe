@@ -1,63 +1,7 @@
 body {
     font: 14px "Century Gothic", Futura, sans-serif;
     margin: 20px;
-    background: url("./images/trap.jpg");
+    background: url("./images/back-2.jpg");
     background-size: cover;
-  }
-  
-  ol, ul {
-    padding-left: 30px;
-  }
-  
-  .board-row:after {
-    clear: both;
-    content: "";
-    display: table;
-  }
-  
-  .status {
-    margin-bottom: 10px;
-  }
-  
-  .square {
-    background: #df86a9;
-    opacity: 0.73;
-    border: 3px solid #000;
-    float: left;
-    font-size: 124px;
-    font-weight: bold;
-    line-height: 150px;
-    height: 150px;
-    margin-right: -1px;
-    margin-top: -1px;
-    padding: 0;
-    text-align: center;
-    width: 150px;
-  }
-  
-  .square:focus {
-    outline: none;
-  }
-  
-  .kbd-navigation .square:focus {
-    background: #ddd;
-  }
-  
-  .game {
-    display: flex;
-    flex-direction: row;
-  }
-  
-  .game-info {
-    margin-left: 20px;
-    background: #df86a9;
-    opacity: 0.73;
-    border: 3px solid #000;
-    float: left;
-    font-size: 14px;
-    font-weight: bold;
-    height: 441px;
-    text-align: center;
-    width: 150px;
   }
   
